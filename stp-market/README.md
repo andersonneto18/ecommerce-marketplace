@@ -16,7 +16,7 @@ Especificação completa do produto em [`lojastp.md`](../lojastp.md) e plano de 
 - **Emails**: Resend (adicionado no Passo 7)
 - **Deploy**: Vercel
 
-> Este projeto está atualmente no **Passo 3** do plano (`passos.md`): painel admin (login, dashboard, CRUD de produtos). Ainda sem loja pública, carrinho ou pagamentos.
+> Este projeto está atualmente no **Passo 4** do plano (`passos.md`): loja pública (homepage, listagem com pesquisa/filtro/ordenação, página de produto). Ainda sem carrinho ou pagamentos.
 
 ## Como instalar
 
@@ -78,6 +78,14 @@ Depois de autenticado:
 
 - `/admin/dashboard` — número de produtos, encomendas, total vendido, stock baixo
 - `/admin/produtos` — listar, criar, editar e eliminar produtos
+
+## Loja pública
+
+- `/` — homepage (banner, história, categorias, produtos em destaque)
+- `/loja` — listagem de produtos, com pesquisa (`?q=`), filtro por categoria (`?categoria=`) e ordenação por preço (`?sort=price-asc|price-desc`)
+- `/produto/[slug]` — página de produto
+
+O botão "Adicionar ao carrinho" ainda não tem lógica associada — o carrinho é implementado no Passo 5.
 
 ## Estrutura do projeto
 

@@ -32,6 +32,8 @@ export async function createProduct(input: ProductInput) {
   });
 
   revalidatePath("/admin/produtos");
+  revalidatePath("/");
+  revalidatePath("/loja");
   redirect("/admin/produtos");
 }
 
@@ -50,10 +52,17 @@ export async function updateProduct(id: string, input: ProductInput) {
   });
 
   revalidatePath("/admin/produtos");
+  revalidatePath("/");
+  revalidatePath("/loja");
+  revalidatePath(`/produto/${existing.slug}`);
+  if (slug !== existing.slug) revalidatePath(`/produto/${slug}`);
   redirect("/admin/produtos");
 }
 
 export async function deleteProduct(id: string) {
-  await prisma.product.delete({ where: { id } });
+  const deleted = await prisma.product.delete({ where: { id } });
   revalidatePath("/admin/produtos");
+  revalidatePath("/");
+  revalidatePath("/loja");
+  revalidatePath(`/produto/${deleted.slug}`);
 }
