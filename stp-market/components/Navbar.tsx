@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { CartLink } from "@/components/CartLink";
 
 export function Navbar() {
   return (
@@ -20,6 +21,7 @@ export function Navbar() {
           <Link href="/loja" className="hover:text-primary">
             Loja
           </Link>
+          <CartLink />
         </nav>
       </div>
     </header>

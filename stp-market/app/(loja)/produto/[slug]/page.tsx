@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
-import { Button } from "@/components/ui/button";
+import { AddToCartForm } from "@/components/AddToCartForm";
 
 async function getProduct(slug: string) {
   const product = await prisma.product.findUnique({
@@ -39,8 +39,6 @@ export default async function ProductPage({
   const product = await getProduct(slug);
 
   if (!product) notFound();
-
-  const outOfStock = product.stock <= 0;
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-12 sm:px-6">
@@ -81,23 +79,12 @@ export default async function ProductPage({
           </p>
 
           <p className="text-sm text-muted-foreground">
-            {outOfStock ? "Esgotado" : `${product.stock} unidades disponíveis`}
+            {product.stock <= 0
+              ? "Esgotado"
+              : `${product.stock} unidades disponíveis`}
           </p>
 
-          <div className="flex items-center gap-3">
-            <input
-              type="number"
-              min={1}
-              max={Math.max(product.stock, 1)}
-              defaultValue={1}
-              disabled={outOfStock}
-              className="h-9 w-20 rounded-md border border-input bg-background px-3 text-sm disabled:opacity-50"
-              aria-label="Quantidade"
-            />
-            <Button disabled={outOfStock} size="lg">
-              {outOfStock ? "Esgotado" : "Adicionar ao carrinho"}
-            </Button>
-          </div>
+          <AddToCartForm product={product} />
         </div>
       </div>
     </div>

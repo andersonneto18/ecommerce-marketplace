@@ -1,8 +1,13 @@
+"use client";
+
 import Link from "next/link";
+import { toast } from "sonner";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { useCart } from "@/hooks/use-cart";
 
 type Product = {
+  id: string;
   slug: string;
   name: string;
   price: number;
@@ -11,7 +16,20 @@ type Product = {
 };
 
 export function ProductCard({ product }: { product: Product }) {
+  const { addItem } = useCart();
   const outOfStock = product.stock <= 0;
+
+  function handleAdd() {
+    addItem({
+      productId: product.id,
+      slug: product.slug,
+      name: product.name,
+      price: product.price,
+      imageUrl: product.imageUrl,
+      stock: product.stock,
+    });
+    toast.success(`${product.name} adicionado ao carrinho`);
+  }
 
   return (
     <Card className="group overflow-hidden py-0">
@@ -39,13 +57,20 @@ export function ProductCard({ product }: { product: Product }) {
         </p>
       </CardContent>
       <CardFooter>
-        <Button
-          render={<Link href={`/produto/${product.slug}`} />}
-          nativeButton={false}
-          className="w-full"
-        >
-          {outOfStock ? "Ver produto" : "Adicionar"}
-        </Button>
+        {outOfStock ? (
+          <Button
+            render={<Link href={`/produto/${product.slug}`} />}
+            nativeButton={false}
+            variant="outline"
+            className="w-full"
+          >
+            Ver produto
+          </Button>
+        ) : (
+          <Button onClick={handleAdd} className="w-full">
+            Adicionar
+          </Button>
+        )}
       </CardFooter>
     </Card>
   );

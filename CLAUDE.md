@@ -80,7 +80,7 @@ Detalhes completos dos campos e relações em [lojastp.md](lojastp.md#base-de-da
 - [x] Passo 2 — Base de dados e modelos
 - [x] Passo 3 — Painel Admin
 - [x] Passo 4 — Loja pública
-- [ ] Passo 5 — Carrinho
+- [x] Passo 5 — Carrinho
 - [ ] Passo 6 — Stripe Checkout
 - [ ] Passo 7 — Cloudinary + Emails
 - [ ] Passo 8 — Deploy Vercel

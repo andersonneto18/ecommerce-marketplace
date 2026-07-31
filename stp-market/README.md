@@ -16,7 +16,7 @@ Especificação completa do produto em [`lojastp.md`](../lojastp.md) e plano de 
 - **Emails**: Resend (adicionado no Passo 7)
 - **Deploy**: Vercel
 
-> Este projeto está atualmente no **Passo 4** do plano (`passos.md`): loja pública (homepage, listagem com pesquisa/filtro/ordenação, página de produto). Ainda sem carrinho ou pagamentos.
+> Este projeto está atualmente no **Passo 5** do plano (`passos.md`): carrinho de compras (localStorage). Ainda sem pagamentos.
 
 ## Como instalar
 
@@ -84,8 +84,11 @@ Depois de autenticado:
 - `/` — homepage (banner, história, categorias, produtos em destaque)
 - `/loja` — listagem de produtos, com pesquisa (`?q=`), filtro por categoria (`?categoria=`) e ordenação por preço (`?sort=price-asc|price-desc`)
 - `/produto/[slug]` — página de produto
+- `/carrinho` — carrinho de compras
 
-O botão "Adicionar ao carrinho" ainda não tem lógica associada — o carrinho é implementado no Passo 5.
+## Carrinho
+
+Estado guardado em `localStorage` (chave `stp-market-cart`), gerido por `CartProvider`/`useCart` (`hooks/use-cart.tsx`) e montado no layout da loja pública. Permite adicionar (da listagem ou da página de produto), alterar quantidade, remover e calcular o total. O botão "Finalizar compra" em `/carrinho` está desativado — o checkout é implementado no Passo 6.
 
 ## Estrutura do projeto
 
