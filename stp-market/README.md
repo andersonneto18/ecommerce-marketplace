@@ -92,6 +92,7 @@ Depois de autenticado:
 
 - `/admin/dashboard` — número de produtos, encomendas, total vendido, stock baixo
 - `/admin/produtos` — listar, criar, editar e eliminar produtos
+- `/admin/encomendas` — listar encomendas; `/admin/encomendas/[id]` mostra os dados completos do cliente (nome, email, telefone, morada) e os produtos, e permite mudar o estado (dispara o email de atualização para o cliente)
 
 ## Loja pública
 
@@ -121,14 +122,11 @@ No formulário de produto do admin (`/admin/produtos/novo` e `/admin/produtos/[i
 
 ## Emails (Brevo)
 
-Disparados automaticamente pelo webhook do Stripe depois de criar a encomenda:
+- **Cliente** — confirmação da compra, disparada automaticamente pelo webhook do Stripe depois de criar a encomenda (`orderConfirmationEmail`)
+- **Admin** — aviso de nova encomenda para `ADMIN_EMAIL`, com nome, email, telefone e **morada completa** do cliente e a lista de produtos, para preparar o envio (`newOrderAdminEmail`)
+- **Cliente** — atualização do estado da encomenda (`orderStatusUpdateEmail`), disparada quando o estado é alterado em `/admin/encomendas/[id]`
 
-- **Cliente** — confirmação da compra (`lib/email/templates.ts` → `orderConfirmationEmail`)
-- **Admin** — aviso de nova encomenda, enviado para `ADMIN_EMAIL` (`newOrderAdminEmail`)
-
-Existe também `orderStatusUpdateEmail`/`sendOrderStatusUpdateEmail` pronto a usar para avisar o cliente quando o estado da encomenda mudar, mas **ainda sem nenhum sítio que o dispare** — o plano de execução (`passos.md`) não chegou a pedir uma página de gestão de encomendas (`admin/encomendas`) em nenhum passo até agora. Fica pronto para ligar quando essa página existir.
-
-Falhas no envio de email nunca bloqueiam o checkout — ficam apenas registadas nos logs do servidor.
+Falhas no envio de email nunca bloqueiam o checkout nem a mudança de estado — ficam apenas registadas nos logs do servidor.
 
 ## Estrutura do projeto
 

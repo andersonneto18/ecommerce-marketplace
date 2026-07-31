@@ -115,14 +115,29 @@ export function newOrderAdminEmail(params: {
   orderId: string;
   customerName: string;
   customerEmail: string;
+  customerPhone: string;
+  address: string;
+  city: string;
+  postalCode: string;
+  country: string;
   items: OrderEmailItem[];
   total: number;
 }) {
   const body = `
-    <p>Nova encomenda recebida de <strong>${params.customerName}</strong> (${params.customerEmail}).</p>
+    <p>Nova encomenda paga — <strong>#${orderReference(params.orderId)}</strong>.</p>
     ${itemsTable(params.items)}
     <p style="text-align:right;font-size:16px;font-weight:bold;">Total: €${params.total.toFixed(2)}</p>
-    <p>Encomenda #${orderReference(params.orderId)}.</p>
+
+    <h2 style="margin:24px 0 8px;font-size:15px;">Dados para envio</h2>
+    <table role="presentation" width="100%" style="font-size:14px;line-height:1.6;">
+      <tr><td style="color:#8a7a68;width:80px;">Nome</td><td>${params.customerName}</td></tr>
+      <tr><td style="color:#8a7a68;">Email</td><td>${params.customerEmail}</td></tr>
+      <tr><td style="color:#8a7a68;">Telefone</td><td>${params.customerPhone || "—"}</td></tr>
+      <tr><td style="color:#8a7a68;">Morada</td><td>${params.address || "—"}</td></tr>
+      <tr><td style="color:#8a7a68;">Cidade</td><td>${params.city || "—"}</td></tr>
+      <tr><td style="color:#8a7a68;">Cód. postal</td><td>${params.postalCode || "—"}</td></tr>
+      <tr><td style="color:#8a7a68;">País</td><td>${params.country || "—"}</td></tr>
+    </table>
   `;
   return {
     subject: `Nova encomenda recebida — €${params.total.toFixed(2)}`,

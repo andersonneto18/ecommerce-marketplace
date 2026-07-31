@@ -39,6 +39,11 @@ export async function sendNewOrderAdminEmail(params: {
   orderId: string;
   customerName: string;
   customerEmail: string;
+  customerPhone: string;
+  address: string;
+  city: string;
+  postalCode: string;
+  country: string;
   items: OrderEmailItem[];
   total: number;
 }) {

@@ -131,6 +131,11 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
       orderId: order.id,
       customerName: customer.name,
       customerEmail: customer.email,
+      customerPhone: customer.phone,
+      address: customer.address,
+      city: customer.city,
+      postalCode: customer.postalCode,
+      country: customer.country,
       items: emailItems,
       total,
     });
