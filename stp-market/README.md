@@ -92,6 +92,7 @@ Depois de autenticado:
 
 - `/admin/dashboard` — número de produtos, encomendas, total vendido, stock baixo
 - `/admin/produtos` — listar, criar, editar e eliminar produtos
+- `/admin/categorias` — listar, criar e editar categorias (sem eliminar, para não partir produtos que já as referenciam)
 - `/admin/encomendas` — listar encomendas; `/admin/encomendas/[id]` mostra os dados completos do cliente (nome, email, telefone, morada) e os produtos, e permite mudar o estado (dispara o email de atualização para o cliente)
 
 ## Loja pública
