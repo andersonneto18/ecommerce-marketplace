@@ -89,3 +89,42 @@ Detalhes completos dos campos e relações em [lojastp.md](lojastp.md#base-de-da
 - [x] Passo 6 — Stripe Checkout
 - [x] Passo 7 — Cloudinary + Emails
 - [ ] Passo 8 — Deploy Vercel
+
+## Planeamento futuro: Marketplace multi-vendedor
+
+**Estado: apenas conversado/desenhado, nada construído ainda.** Não avançar sem pedido explícito do utilizador ("vamos", "começa", etc. — não basta responder a perguntas de clarificação). Recomendação: só depois de fechar o Passo 8.
+
+Isto é a concretização do que `lojastp.md` já apontava como "objetivo futuro" (marketplace com múltiplos produtores/vendedores) e "melhorias futuras" (multi vendedores, comissão por venda).
+
+**Modelo acordado em conversa:**
+
+- Loja única e unificada — os produtos dos vendedores aparecem misturados com os do admin no mesmo catálogo (`/loja`), sem mini-lojas nem páginas por vendedor.
+- Sem Stripe Connect / sem divisão automática do pagamento — decisão explícita para manter simples. O checkout continua a ser um único pagamento normal, como já está.
+
+**Fluxo do vendedor:**
+
+```text
+Loja pública → link "Torna-te vendedor" → candidatura (formulário)
+   → fica "Pendente" em admin/fornecedores
+   → Admin aprova ou rejeita
+   → Se aprovado: recebe login/password → painel próprio
+   → No painel: publica/edita os SEUS produtos (entram no catálogo normal da loja)
+```
+
+**Fluxo do dinheiro (por cada venda):**
+
+```text
+Cliente compra (carrinho pode misturar produtos de vários vendedores) → paga tudo junto (Stripe, como já está)
+   → por cada item da encomenda, o sistema sabe a que vendedor pertence
+   → valor do item divide-se: vendedor recebe (preço − comissão), admin fica com a comissão
+   → painel do vendedor mostra: total vendido, comissão descontada, saldo disponível
+   → vendedor pode "Solicitar levantamento" (escolhe quanto, até ao saldo disponível)
+   → pedido fica pendente → Admin vê a lista de pedidos, paga por fora (transferência bancária) e marca "Pago"
+   → saldo do vendedor é atualizado
+```
+
+Simulação de referência (comissão exemplo de 10%, não decidida): produto vendido a €20 → vendedor fica com €18, admin com €2.
+
+**Decisão em aberto:** taxa de comissão única e global para todos os vendedores, vs. taxa configurável por vendedor. Ainda não escolhido.
+
+**Implica (a alto nível, nada disto está feito):** entidade de Vendedor/Fornecedor com estado (pendente/aprovado/rejeitado) e login próprio; `Product` passa a poder pertencer a um vendedor (campo opcional — produtos do admin continuam a existir sem vendedor); registo de saldo/comissão por venda; entidade de pedido de levantamento; página `admin/fornecedores` (aprovar candidaturas, ver saldos, gerir levantamentos); painel do vendedor (produtos próprios + saldo + pedir levantamento).
