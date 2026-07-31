@@ -1,4 +1,4 @@
-# STP Market
+# Neto Sabores
 
 Loja online de produtos de São Tomé e Príncipe para clientes em Portugal.
 

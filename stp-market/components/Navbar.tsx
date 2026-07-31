@@ -7,10 +7,10 @@ export function Navbar() {
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
         <Link href="/" className="flex items-baseline gap-1">
           <span className="text-lg font-heading font-semibold tracking-tight text-primary">
-            STP
+            Neto
           </span>
           <span className="text-lg font-heading font-semibold tracking-tight">
-            Market
+            Sabores
           </span>
         </Link>
 

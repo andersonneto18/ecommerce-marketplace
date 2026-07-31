@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "STP Market — Produtos de São Tomé e Príncipe",
+  title: "Neto Sabores — Produtos de São Tomé e Príncipe",
   description:
     "Café, cacau, chocolate e artesanato de São Tomé e Príncipe, entregues em Portugal.",
 };

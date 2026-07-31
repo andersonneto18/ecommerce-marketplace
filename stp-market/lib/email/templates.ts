@@ -14,7 +14,7 @@ function emailLayout(title: string, bodyHtml: string) {
           <table role="presentation" width="100%" style="max-width:480px;background-color:#ffffff;border-radius:12px;overflow:hidden;border:1px solid #e8ddce;">
             <tr>
               <td style="background-color:#b5622a;padding:24px 32px;">
-                <span style="color:#ffffff;font-size:20px;font-weight:bold;">STP Market</span>
+                <span style="color:#ffffff;font-size:20px;font-weight:bold;">Neto Sabores</span>
               </td>
             </tr>
             <tr>
@@ -25,7 +25,7 @@ function emailLayout(title: string, bodyHtml: string) {
             </tr>
             <tr>
               <td style="padding:24px 32px;background-color:#faf5ee;border-top:1px solid #e8ddce;">
-                <p style="margin:0;font-size:12px;color:#8a7a68;">STP Market — Produtos de São Tomé e Príncipe para Portugal.</p>
+                <p style="margin:0;font-size:12px;color:#8a7a68;">Neto Sabores — Produtos de São Tomé e Príncipe para Portugal.</p>
               </td>
             </tr>
           </table>
@@ -79,7 +79,7 @@ export function orderConfirmationEmail(params: {
     <p>Vamos avisar-te assim que a tua encomenda for enviada.</p>
   `;
   return {
-    subject: "A tua encomenda STP Market foi confirmada",
+    subject: "A tua encomenda Neto Sabores foi confirmada",
     html: emailLayout("Encomenda confirmada", body),
   };
 }
@@ -106,7 +106,7 @@ export function orderStatusUpdateEmail(params: {
     <p style="font-size:18px;font-weight:bold;color:#b5622a;">${label}</p>
   `;
   return {
-    subject: `A tua encomenda STP Market está: ${label}`,
+    subject: `A tua encomenda Neto Sabores está: ${label}`,
     html: emailLayout("Atualização da encomenda", body),
   };
 }

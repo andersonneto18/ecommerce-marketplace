@@ -57,7 +57,7 @@ export default async function HomePage() {
               produzir de forma genuína e artesanal.
             </p>
             <p className="text-muted-foreground">
-              A STP Market nasce para trazer essa história até Portugal,
+              A Neto Sabores nasce para trazer essa história até Portugal,
               apoiando diretamente quem produz e dando a conhecer o melhor
               do arquipélago.
             </p>

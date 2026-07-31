@@ -9,7 +9,7 @@ export function Footer() {
         <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
           <div className="max-w-sm space-y-2">
             <p className="font-heading text-lg font-semibold">
-              <span className="text-primary">STP</span> Market
+              <span className="text-primary">Neto</span> Sabores
             </p>
             <p className="text-sm text-muted-foreground">
               Café, cacau, chocolate e artesanato de São Tomé e Príncipe,
@@ -32,7 +32,7 @@ export function Footer() {
         </div>
 
         <p className="mt-8 text-xs text-muted-foreground">
-          © {year} STP Market. Todos os direitos reservados.
+          © {year} Neto Sabores. Todos os direitos reservados.
         </p>
       </div>
     </footer>

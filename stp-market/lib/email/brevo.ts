@@ -1,12 +1,12 @@
 const BREVO_API_URL = "https://api.brevo.com/v3/smtp/email";
 
 function parseSender(): { name: string; email: string } {
-  const raw = process.env.EMAIL_FROM ?? "STP Market <onboarding@stpmarket.pt>";
+  const raw = process.env.EMAIL_FROM ?? "Neto Sabores <onboarding@stpmarket.pt>";
   const match = raw.match(/^(.*)<(.+)>$/);
   if (match) {
     return { name: match[1].trim(), email: match[2].trim() };
   }
-  return { name: "STP Market", email: raw.trim() };
+  return { name: "Neto Sabores", email: raw.trim() };
 }
 
 type SendEmailInput = {
