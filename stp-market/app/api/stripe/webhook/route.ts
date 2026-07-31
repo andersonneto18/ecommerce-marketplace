@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import type Stripe from "stripe";
 import { prisma } from "@/lib/prisma";
 import { getStripe } from "@/lib/stripe";
+import { sendNewOrderAdminEmail, sendOrderConfirmationEmail } from "@/lib/email/send";
 
 export async function POST(request: Request) {
   const body = await request.text();
@@ -46,7 +47,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
     expand: ["data.price.product"],
   });
 
-  const orderItemsData = lineItems.data.flatMap((line) => {
+  const lineItemsData = lineItems.data.flatMap((line) => {
     const product = line.price?.product;
     if (!product || typeof product === "string" || !("metadata" in product)) return [];
     const productId = product.metadata.productId;
@@ -55,13 +56,20 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
     return [
       {
         productId,
+        name: product.name,
         quantity: line.quantity ?? 1,
         price: (line.price?.unit_amount ?? 0) / 100,
       },
     ];
   });
 
-  if (orderItemsData.length === 0) return;
+  if (lineItemsData.length === 0) return;
+
+  const orderItemsData = lineItemsData.map(({ productId, quantity, price }) => ({
+    productId,
+    quantity,
+    price,
+  }));
 
   const shippingDetails = session.collected_information?.shipping_details;
   const customerDetails = session.customer_details;
@@ -84,7 +92,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
 
   const total = orderItemsData.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
-  await prisma.$transaction([
+  const [order] = await prisma.$transaction([
     prisma.order.create({
       data: {
         customerId: customer.id,
@@ -101,4 +109,32 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
       })
     ),
   ]);
+
+  const emailItems = lineItemsData.map(({ name, quantity, price }) => ({
+    name,
+    quantity,
+    price,
+  }));
+
+  try {
+    if (customer.email) {
+      await sendOrderConfirmationEmail({
+        customerName: customer.name,
+        customerEmail: customer.email,
+        orderId: order.id,
+        items: emailItems,
+        total,
+      });
+    }
+
+    await sendNewOrderAdminEmail({
+      orderId: order.id,
+      customerName: customer.name,
+      customerEmail: customer.email,
+      items: emailItems,
+      total,
+    });
+  } catch (error) {
+    console.error("Falha ao enviar emails de confirmação de encomenda:", error);
+  }
 }

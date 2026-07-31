@@ -12,11 +12,11 @@ Especificação completa do produto em [`lojastp.md`](../lojastp.md) e plano de 
 - **Autenticação admin**: Auth.js v5 (`next-auth`), provider Credentials, sessão JWT
 - **Validação**: Zod
 - **Pagamentos**: Stripe Checkout
-- **Imagens**: Cloudinary (adicionado no Passo 7)
-- **Emails**: Resend (adicionado no Passo 7)
+- **Imagens**: Cloudinary
+- **Emails**: Brevo (o plano original previa Resend; trocado a pedido explícito no Passo 7)
 - **Deploy**: Vercel
 
-> Este projeto está atualmente no **Passo 6** do plano (`passos.md`): pagamentos com Stripe Checkout. Emails de confirmação ficam para o Passo 7 (dependem do Resend).
+> Este projeto está atualmente no **Passo 7** do plano (`passos.md`): upload de imagens (Cloudinary) e emails transacionais (Brevo).
 
 ## Como instalar
 
@@ -55,6 +55,10 @@ O `postinstall` corre automaticamente `prisma generate`.
    ```
 
    Copia o `whsec_...` que o comando imprime para `STRIPE_WEBHOOK_SECRET` no `.env`. Usa um [cartão de teste](https://docs.stripe.com/testing#cards) do Stripe (ex: `4242 4242 4242 4242`, qualquer data futura e CVC) para simular o pagamento.
+
+7. Preencher `CLOUDINARY_NAME`, `CLOUDINARY_KEY` e `CLOUDINARY_SECRET` com os dados da tua conta [Cloudinary](https://console.cloudinary.com). Sem isto, o upload de imagem no admin falha com um erro claro — continua a ser possível colar uma URL de imagem manualmente.
+
+8. Preencher `BREVO_API_KEY` com a chave da tua conta [Brevo](https://app.brevo.com/settings/keys/api) e `EMAIL_FROM` com um remetente **verificado** nessa conta. Sem isto, a compra continua a funcionar normalmente — só o envio de emails falha silenciosamente (fica registado nos logs do servidor, não interrompe o checkout).
 
 ## Como correr localmente
 
@@ -111,7 +115,20 @@ Fluxo: `/carrinho` → `/checkout` (resumo da encomenda) → Stripe Checkout (ho
 - `app/api/stripe/webhook/route.ts` — recebe `checkout.session.completed`, cria `Customer`, `Order` (status `PAID`) e `OrderItem`s, e reduz o stock dos produtos. Idempotente: `Order.stripePaymentId` é único, por isso reentregas do mesmo evento (comportamento normal do Stripe) não duplicam a encomenda.
 - `/sucesso` — mostra a confirmação (email e total, se a sessão for válida) e limpa o carrinho.
 
-Envio do email de confirmação fica para o Passo 7 (Resend).
+## Imagens (Cloudinary)
+
+No formulário de produto do admin (`/admin/produtos/novo` e `/admin/produtos/[id]/editar`), o campo "Imagem do produto" permite escolher um ficheiro — é enviado para o Cloudinary a partir do servidor (`uploadProductImage`, nunca com as credenciais expostas no browser) para a pasta `stp-market/produtos`. Existe sempre uma alternativa de colar a URL da imagem manualmente, útil sem conta Cloudinary configurada.
+
+## Emails (Brevo)
+
+Disparados automaticamente pelo webhook do Stripe depois de criar a encomenda:
+
+- **Cliente** — confirmação da compra (`lib/email/templates.ts` → `orderConfirmationEmail`)
+- **Admin** — aviso de nova encomenda, enviado para `ADMIN_EMAIL` (`newOrderAdminEmail`)
+
+Existe também `orderStatusUpdateEmail`/`sendOrderStatusUpdateEmail` pronto a usar para avisar o cliente quando o estado da encomenda mudar, mas **ainda sem nenhum sítio que o dispare** — o plano de execução (`passos.md`) não chegou a pedir uma página de gestão de encomendas (`admin/encomendas`) em nenhum passo até agora. Fica pronto para ligar quando essa página existir.
+
+Falhas no envio de email nunca bloqueiam o checkout — ficam apenas registadas nos logs do servidor.
 
 ## Estrutura do projeto
 
@@ -127,7 +144,7 @@ prisma/         schema.prisma e migrations
 ## Como fazer deploy na Vercel
 
 1. Criar um projeto na [Vercel](https://vercel.com) apontado para este repositório (definir a *root directory* como `stp-market/`, se o repositório incluir a documentação na raiz).
-2. Configurar as variáveis de ambiente do projeto na Vercel (as mesmas do `.env`); Cloudinary e Resend serão adicionadas no Passo 7. O `STRIPE_WEBHOOK_SECRET` de produção é diferente do de desenvolvimento — só existe depois de criar o endpoint de webhook no dashboard da Stripe a apontar para `https://<o-teu-domínio>/api/stripe/webhook` (feito no Passo 8, quando já há um domínio).
+2. Configurar as variáveis de ambiente do projeto na Vercel (as mesmas do `.env`). O `STRIPE_WEBHOOK_SECRET` de produção é diferente do de desenvolvimento — só existe depois de criar o endpoint de webhook no dashboard da Stripe a apontar para `https://<o-teu-domínio>/api/stripe/webhook` (feito no Passo 8, quando já há um domínio).
 3. A Vercel corre `npm install` (que gera o Prisma Client via `postinstall`) e depois `npm run build` automaticamente.
 4. Garantir que as migrations da base de dados Neon estão aplicadas antes ou durante o deploy (`npx prisma migrate deploy`).
 

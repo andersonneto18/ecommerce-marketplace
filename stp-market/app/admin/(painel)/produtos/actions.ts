@@ -4,7 +4,39 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { slugify } from "@/lib/slugify";
+import { cloudinary } from "@/lib/cloudinary";
 import { productSchema, type ProductInput } from "@/lib/validations/product";
+
+const MAX_IMAGE_SIZE = 5 * 1024 * 1024; // 5MB
+
+export async function uploadProductImage(formData: FormData) {
+  const file = formData.get("file");
+
+  if (!(file instanceof File) || file.size === 0) {
+    throw new Error("Ficheiro inválido.");
+  }
+  if (!file.type.startsWith("image/")) {
+    throw new Error("O ficheiro tem de ser uma imagem.");
+  }
+  if (file.size > MAX_IMAGE_SIZE) {
+    throw new Error("A imagem não pode exceder 5MB.");
+  }
+
+  const buffer = Buffer.from(await file.arrayBuffer());
+  const dataUri = `data:${file.type};base64,${buffer.toString("base64")}`;
+
+  try {
+    const result = await cloudinary.uploader.upload(dataUri, {
+      folder: "stp-market/produtos",
+    });
+    return { url: result.secure_url };
+  } catch (error) {
+    console.error("Falha no upload para o Cloudinary:", error);
+    throw new Error(
+      "Não foi possível enviar a imagem. Verifica se o Cloudinary está configurado (CLOUDINARY_NAME/KEY/SECRET) ou cola a URL manualmente."
+    );
+  }
+}
 
 async function uniqueSlug(name: string, ignoreId?: string) {
   const base = slugify(name);

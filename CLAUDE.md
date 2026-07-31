@@ -18,7 +18,7 @@ Este ficheiro é o guia de trabalho para desenvolver o **STP Market**, uma loja 
 | Base de dados | PostgreSQL (Neon) + Prisma ORM |
 | Pagamentos | Stripe Checkout |
 | Imagens | Cloudinary |
-| Emails | Resend |
+| Emails | Brevo |
 | Validação | Zod |
 | Deploy | Vercel |
 
@@ -34,6 +34,8 @@ Este ficheiro é o guia de trabalho para desenvolver o **STP Market**, uma loja 
 - **Route groups**: a loja pública vive em `app/(loja)/` (layout com Navbar+Footer) e o admin autenticado em `app/admin/(painel)/` (layout com sidebar); `admin/login` fica fora do grupo `(painel)`. Os parênteses não afetam os URLs finais (`/`, `/loja`, `/admin/dashboard`, etc.). `checkout` e `sucesso` também vivem em `app/(loja)/` porque precisam do `CartProvider` montado nesse layout.
 - **Stripe**: cliente criado de forma preguiçosa em `lib/stripe.ts` (`getStripe()`, não uma instância a nível de módulo) — instanciar `new Stripe(...)` no topo do módulo falha o build (`next build` importa as rotas para recolher metadados) sempre que `STRIPE_SECRET_KEY` estiver vazio, como acontece em desenvolvimento sem conta Stripe configurada. Preços dos line items do Checkout Session são sempre recalculados a partir da BD no servidor (nunca confiar no preço que vem do carrinho/cliente). `Order.stripePaymentId` tem constraint `@unique` para o webhook ser idempotente em reentregas do mesmo evento.
 - **Páginas públicas com dados da BD**: usar `export const dynamic = "force-dynamic"` (ex: homepage) em vez de deixar o Next pré-renderizar estaticamente no build — evita falhas de build se a BD estiver indisponível nesse momento e garante stock/preços sempre atuais. Páginas com `searchParams` (ex: `/loja`) já são dinâmicas automaticamente.
+- **Emails**: usar **Brevo** (pedido explícito do utilizador no Passo 7, substitui o Resend previsto em `lojastp.md`/`passos.md`). Chamada direta à REST API da Brevo (`lib/email/brevo.ts`, `fetch` para `api.brevo.com`) em vez de instalar o SDK — evita mais um cliente instanciado a nível de módulo (o mesmo problema que já aconteceu com o Stripe) e mantém a dependência mínima. Variável de ambiente: `BREVO_API_KEY`. Templates em `lib/email/templates.ts`, funções de envio em `lib/email/send.ts`; confirmação de compra e aviso ao admin disparados no webhook Stripe após criar a `Order`. `sendOrderStatusUpdateEmail` existe mas **não tem ainda nenhum trigger** — não há UI de gestão de encomendas (`admin/encomendas`) em nenhum passo do plano até agora; ligar quando essa página for criada.
+- **Cloudinary**: `lib/cloudinary.ts` configura o SDK a nível de módulo (ao contrário do Stripe, `cloudinary.config()` não lança erro com credenciais vazias, só falha quando se tenta mesmo fazer upload — por isso não precisa do padrão "lazy client"). Upload feito no servidor (`uploadProductImage` em `app/admin/(painel)/produtos/actions.ts`, via data URI base64) nunca no cliente, para não expor `CLOUDINARY_SECRET`. O campo de imagem no `ProductForm` mantém sempre um input de URL manual como alternativa ao upload.
 
 ## Estrutura de pastas alvo
 
@@ -83,5 +85,5 @@ Detalhes completos dos campos e relações em [lojastp.md](lojastp.md#base-de-da
 - [x] Passo 4 — Loja pública
 - [x] Passo 5 — Carrinho
 - [x] Passo 6 — Stripe Checkout
-- [ ] Passo 7 — Cloudinary + Emails
+- [x] Passo 7 — Cloudinary + Emails
 - [ ] Passo 8 — Deploy Vercel

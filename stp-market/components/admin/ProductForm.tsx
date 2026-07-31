@@ -16,6 +16,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { productSchema, type ProductInput } from "@/lib/validations/product";
+import { uploadProductImage } from "@/app/admin/(painel)/produtos/actions";
 
 type Category = { id: string; name: string };
 
@@ -31,11 +32,15 @@ export function ProductForm({
   submitLabel: string;
 }) {
   const [formError, setFormError] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
 
   const {
     register,
     handleSubmit,
     control,
+    watch,
+    setValue,
     formState: { errors, isSubmitting },
   } = useForm<ProductInput>({
     resolver: zodResolver(productSchema),
@@ -59,6 +64,29 @@ export function ProductForm({
       setFormError("Não foi possível guardar o produto.");
     }
   }
+
+  async function handleFileChange(event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setUploadError(null);
+    setIsUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const { url } = await uploadProductImage(formData);
+      setValue("imageUrl", url, { shouldValidate: true });
+    } catch (error) {
+      setUploadError(
+        error instanceof Error ? error.message : "Não foi possível enviar a imagem."
+      );
+    } finally {
+      setIsUploading(false);
+      event.target.value = "";
+    }
+  }
+
+  const imageUrl = watch("imageUrl");
 
   return (
     <form onSubmit={handleSubmit(submit)} className="max-w-xl space-y-4">
@@ -100,8 +128,32 @@ export function ProductForm({
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="imageUrl">URL da imagem</Label>
-        <Input id="imageUrl" {...register("imageUrl")} />
+        <Label htmlFor="imageFile">Imagem do produto</Label>
+        <div className="flex items-center gap-4">
+          {imageUrl && (
+            // eslint-disable-next-line @next/next/no-img-element -- pré-visualização de imagens externas/Cloudinary
+            <img
+              src={imageUrl}
+              alt=""
+              className="size-16 shrink-0 rounded-md border border-input object-cover"
+            />
+          )}
+          <div className="flex-1 space-y-1">
+            <input
+              id="imageFile"
+              type="file"
+              accept="image/*"
+              onChange={handleFileChange}
+              disabled={isUploading}
+              className="w-full text-sm"
+            />
+            {isUploading && (
+              <p className="text-xs text-muted-foreground">A enviar para o Cloudinary...</p>
+            )}
+            {uploadError && <p className="text-xs text-destructive">{uploadError}</p>}
+          </div>
+        </div>
+        <Input placeholder="ou cola diretamente uma URL de imagem" {...register("imageUrl")} />
         {errors.imageUrl && (
           <p className="text-sm text-destructive">{errors.imageUrl.message}</p>
         )}
