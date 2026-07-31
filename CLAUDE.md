@@ -25,7 +25,8 @@ Este ficheiro é o guia de trabalho para desenvolver o **STP Market**, uma loja 
 ## Convenções e decisões técnicas
 
 - **Hashing de password**: usar `bcryptjs` (não `bcrypt`) — evita problemas de build/native bindings em ambiente serverless/edge da Vercel.
-- **Autenticação admin**: preferir Auth.js/NextAuth em vez de sessão manual, para já resolver cookies seguros e gestão de sessão sem código extra.
+- **Autenticação admin**: Auth.js v5 (`next-auth@beta`) com provider Credentials (email/password, bcryptjs), sessão JWT. Config dividida em `auth.config.ts` (edge-safe, usado pelo `middleware.ts`) e `auth.ts` (config completa com Prisma/bcrypt, usado no route handler e nas Server Components/Actions) — evita bundlar Prisma/bcrypt no runtime edge do middleware. Rotas `/admin/*` protegidas pelo `middleware.ts`; `/admin/login` fica fora do route group `(painel)` para não herdar o layout com sidebar.
+- **shadcn/ui**: este projeto usa o estilo `base-nova` (assente em `@base-ui/react`, não Radix). Para renderizar outro elemento dentro de `Button`/`AlertDialogTrigger`/etc. usar a prop `render={<Link ... />}` (+ `nativeButton={false}` quando o alvo não é um `<button>`), **não** `asChild` (isso é Radix).
 - **Prisma**: ligação sempre via singleton em `lib/prisma.ts` para evitar múltiplas conexões em desenvolvimento. Usa Prisma 7 com o driver adapter `@prisma/adapter-pg` (ligação TCP standard) — funciona com a connection string direta da Neon e com Postgres local; evitar `@prisma/adapter-neon` (driver websocket) a menos que se corra em runtime edge.
 - **Validação**: todos os inputs (formulários, API routes, server actions) devem passar por schemas Zod.
 - **Segurança**: nunca expor chaves privadas no cliente; variáveis sensíveis só em `.env` (nunca commitadas); rotas `/admin` sempre protegidas por middleware/verificação de sessão.
@@ -75,7 +76,7 @@ Detalhes completos dos campos e relações em [lojastp.md](lojastp.md#base-de-da
 
 - [x] Passo 1 — Base do projeto (Next.js + Neon + Prisma)
 - [x] Passo 2 — Base de dados e modelos
-- [ ] Passo 3 — Painel Admin
+- [x] Passo 3 — Painel Admin
 - [ ] Passo 4 — Loja pública
 - [ ] Passo 5 — Carrinho
 - [ ] Passo 6 — Stripe Checkout

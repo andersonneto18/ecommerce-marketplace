@@ -1,6 +1,23 @@
+import bcrypt from "bcryptjs";
 import { prisma } from "../lib/prisma";
 
 async function main() {
+  const adminEmail = process.env.ADMIN_EMAIL;
+  const adminPassword = process.env.ADMIN_PASSWORD;
+
+  if (adminEmail && adminPassword) {
+    const hashedPassword = await bcrypt.hash(adminPassword, 10);
+    await prisma.user.upsert({
+      where: { email: adminEmail },
+      update: { password: hashedPassword },
+      create: { email: adminEmail, password: hashedPassword, role: "ADMIN" },
+    });
+  } else {
+    console.warn(
+      "ADMIN_EMAIL/ADMIN_PASSWORD não definidos — utilizador admin não foi criado."
+    );
+  }
+
   const categories = [
     { name: "Café", slug: "cafe" },
     { name: "Cacau", slug: "cacau" },

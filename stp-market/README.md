@@ -9,13 +9,14 @@ Especificação completa do produto em [`lojastp.md`](../lojastp.md) e plano de 
 - **Frontend**: Next.js 15 (App Router), TypeScript, React, Tailwind CSS, shadcn/ui
 - **Backend**: Server Actions, Route Handlers e API Routes do Next.js
 - **Base de dados**: PostgreSQL (Neon) + Prisma ORM (com `@prisma/adapter-pg`, ligação TCP standard — compatível com Neon e com Postgres local)
+- **Autenticação admin**: Auth.js v5 (`next-auth`), provider Credentials, sessão JWT
 - **Validação**: Zod
 - **Pagamentos**: Stripe Checkout (adicionado no Passo 6)
 - **Imagens**: Cloudinary (adicionado no Passo 7)
 - **Emails**: Resend (adicionado no Passo 7)
 - **Deploy**: Vercel
 
-> Este projeto está atualmente no **Passo 2** do plano (`passos.md`): modelos Prisma, migration inicial e seed. Ainda sem loja pública, carrinho ou pagamentos.
+> Este projeto está atualmente no **Passo 3** do plano (`passos.md`): painel admin (login, dashboard, CRUD de produtos). Ainda sem loja pública, carrinho ou pagamentos.
 
 ## Como instalar
 
@@ -36,6 +37,14 @@ O `postinstall` corre automaticamente `prisma generate`.
 2. Preencher `DATABASE_URL` com a connection string do teu projeto [Neon](https://neon.tech) (formato `postgresql://...`).
 
    Para desenvolvimento local sem Neon, também podes usar `npx prisma dev` (Postgres local do próprio Prisma, sem Docker) e copiar a `DATABASE_URL` que o comando imprime.
+
+3. Gerar `AUTH_SECRET`:
+
+   ```bash
+   node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
+   ```
+
+4. Definir `ADMIN_EMAIL` e `ADMIN_PASSWORD` — são usados pelo seed (`npx prisma db seed`) para criar o utilizador administrador com password já cifrada (bcryptjs). É essa a conta usada para entrar em `/admin/login`.
 
 ## Como correr localmente
 
@@ -60,6 +69,15 @@ npx prisma migrate dev   # criar/aplicar migrations em desenvolvimento
 npx prisma db seed       # popular a base de dados com produtos de exemplo
 npx prisma studio        # explorar a base de dados
 ```
+
+## Painel Admin
+
+Aceder a [http://localhost:3000/admin](http://localhost:3000/admin) — redireciona para `/admin/login`. Usa as credenciais definidas em `ADMIN_EMAIL`/`ADMIN_PASSWORD` (criadas pelo seed).
+
+Depois de autenticado:
+
+- `/admin/dashboard` — número de produtos, encomendas, total vendido, stock baixo
+- `/admin/produtos` — listar, criar, editar e eliminar produtos
 
 ## Estrutura do projeto
 
