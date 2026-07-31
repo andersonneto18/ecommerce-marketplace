@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { OrderStatusSelect } from "@/components/admin/OrderStatusSelect";
+import { OrderStatusTimeline } from "@/components/admin/OrderStatusTimeline";
 
 export default async function OrderDetailPage({
   params,
@@ -19,12 +20,19 @@ export default async function OrderDetailPage({
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold">
-          Encomenda #{order.id.slice(-8).toUpperCase()}
-        </h1>
-        <OrderStatusSelect orderId={order.id} currentStatus={order.status} />
-      </div>
+      <h1 className="text-2xl font-semibold">
+        Encomenda #{order.id.slice(-8).toUpperCase()}
+      </h1>
+
+      <Card>
+        <CardHeader className="flex-row items-center justify-between">
+          <CardTitle>Estado da encomenda</CardTitle>
+          <OrderStatusSelect orderId={order.id} currentStatus={order.status} />
+        </CardHeader>
+        <CardContent>
+          <OrderStatusTimeline status={order.status} />
+        </CardContent>
+      </Card>
 
       <div className="grid gap-6 sm:grid-cols-2">
         <Card>
