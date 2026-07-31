@@ -11,12 +11,12 @@ Especificação completa do produto em [`lojastp.md`](../lojastp.md) e plano de 
 - **Base de dados**: PostgreSQL (Neon) + Prisma ORM (com `@prisma/adapter-pg`, ligação TCP standard — compatível com Neon e com Postgres local)
 - **Autenticação admin**: Auth.js v5 (`next-auth`), provider Credentials, sessão JWT
 - **Validação**: Zod
-- **Pagamentos**: Stripe Checkout (adicionado no Passo 6)
+- **Pagamentos**: Stripe Checkout
 - **Imagens**: Cloudinary (adicionado no Passo 7)
 - **Emails**: Resend (adicionado no Passo 7)
 - **Deploy**: Vercel
 
-> Este projeto está atualmente no **Passo 5** do plano (`passos.md`): carrinho de compras (localStorage). Ainda sem pagamentos.
+> Este projeto está atualmente no **Passo 6** do plano (`passos.md`): pagamentos com Stripe Checkout. Emails de confirmação ficam para o Passo 7 (dependem do Resend).
 
 ## Como instalar
 
@@ -45,6 +45,16 @@ O `postinstall` corre automaticamente `prisma generate`.
    ```
 
 4. Definir `ADMIN_EMAIL` e `ADMIN_PASSWORD` — são usados pelo seed (`npx prisma db seed`) para criar o utilizador administrador com password já cifrada (bcryptjs). É essa a conta usada para entrar em `/admin/login`.
+
+5. Preencher `STRIPE_SECRET_KEY` e `NEXT_PUBLIC_STRIPE_KEY` com as chaves de teste da tua conta Stripe ([dashboard.stripe.com/test/apikeys](https://dashboard.stripe.com/test/apikeys)). Sem isto, a loja funciona normalmente mas o botão "Pagar com Stripe" falha com um erro claro no ecrã.
+
+6. Para testar o pagamento e o webhook localmente, instala a [Stripe CLI](https://docs.stripe.com/stripe-cli) e corre, num terminal à parte:
+
+   ```bash
+   stripe listen --forward-to localhost:3000/api/stripe/webhook
+   ```
+
+   Copia o `whsec_...` que o comando imprime para `STRIPE_WEBHOOK_SECRET` no `.env`. Usa um [cartão de teste](https://docs.stripe.com/testing#cards) do Stripe (ex: `4242 4242 4242 4242`, qualquer data futura e CVC) para simular o pagamento.
 
 ## Como correr localmente
 
@@ -85,10 +95,23 @@ Depois de autenticado:
 - `/loja` — listagem de produtos, com pesquisa (`?q=`), filtro por categoria (`?categoria=`) e ordenação por preço (`?sort=price-asc|price-desc`)
 - `/produto/[slug]` — página de produto
 - `/carrinho` — carrinho de compras
+- `/checkout` — resumo da encomenda e botão de pagamento
+- `/sucesso` — confirmação após pagamento
 
 ## Carrinho
 
-Estado guardado em `localStorage` (chave `stp-market-cart`), gerido por `CartProvider`/`useCart` (`hooks/use-cart.tsx`) e montado no layout da loja pública. Permite adicionar (da listagem ou da página de produto), alterar quantidade, remover e calcular o total. O botão "Finalizar compra" em `/carrinho` está desativado — o checkout é implementado no Passo 6.
+Estado guardado em `localStorage` (chave `stp-market-cart`), gerido por `CartProvider`/`useCart` (`hooks/use-cart.tsx`) e montado no layout da loja pública. Permite adicionar (da listagem ou da página de produto), alterar quantidade, remover e calcular o total.
+
+## Pagamentos (Stripe)
+
+Fluxo: `/carrinho` → `/checkout` (resumo da encomenda) → Stripe Checkout (hospedado pela Stripe, recolhe morada de envio para Portugal, telefone e pagamento) → `/sucesso`.
+
+- `lib/stripe.ts` — cliente Stripe criado de forma preguiçosa (`getStripe()`), só falha se realmente for usado sem `STRIPE_SECRET_KEY` configurada.
+- `app/(loja)/checkout/actions.ts` — Server Action que valida o carrinho com Zod, **recalcula os preços a partir da base de dados** (nunca confia no preço vindo do cliente) e cria a Checkout Session.
+- `app/api/stripe/webhook/route.ts` — recebe `checkout.session.completed`, cria `Customer`, `Order` (status `PAID`) e `OrderItem`s, e reduz o stock dos produtos. Idempotente: `Order.stripePaymentId` é único, por isso reentregas do mesmo evento (comportamento normal do Stripe) não duplicam a encomenda.
+- `/sucesso` — mostra a confirmação (email e total, se a sessão for válida) e limpa o carrinho.
+
+Envio do email de confirmação fica para o Passo 7 (Resend).
 
 ## Estrutura do projeto
 
@@ -104,7 +127,7 @@ prisma/         schema.prisma e migrations
 ## Como fazer deploy na Vercel
 
 1. Criar um projeto na [Vercel](https://vercel.com) apontado para este repositório (definir a *root directory* como `stp-market/`, se o repositório incluir a documentação na raiz).
-2. Configurar as variáveis de ambiente do projeto na Vercel (as mesmas do `.env`, começando por `DATABASE_URL`; mais variáveis serão adicionadas nos passos seguintes — Stripe, Cloudinary, Resend).
+2. Configurar as variáveis de ambiente do projeto na Vercel (as mesmas do `.env`); Cloudinary e Resend serão adicionadas no Passo 7. O `STRIPE_WEBHOOK_SECRET` de produção é diferente do de desenvolvimento — só existe depois de criar o endpoint de webhook no dashboard da Stripe a apontar para `https://<o-teu-domínio>/api/stripe/webhook` (feito no Passo 8, quando já há um domínio).
 3. A Vercel corre `npm install` (que gera o Prisma Client via `postinstall`) e depois `npm run build` automaticamente.
 4. Garantir que as migrations da base de dados Neon estão aplicadas antes ou durante o deploy (`npx prisma migrate deploy`).
 

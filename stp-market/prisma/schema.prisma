@@ -67,7 +67,7 @@ model Order {
   id              String      @id @default(cuid())
   customerId      String
   customer        Customer    @relation(fields: [customerId], references: [id])
-  stripePaymentId String?
+  stripePaymentId String?     @unique
   total           Float
   status          OrderStatus @default(PENDING)
   items           OrderItem[]

@@ -31,7 +31,8 @@ Este ficheiro é o guia de trabalho para desenvolver o **STP Market**, uma loja 
 - **Validação**: todos os inputs (formulários, API routes, server actions) devem passar por schemas Zod.
 - **Segurança**: nunca expor chaves privadas no cliente; variáveis sensíveis só em `.env` (nunca commitadas); rotas `/admin` sempre protegidas por middleware/verificação de sessão.
 - **Carrinho**: estado inicial em `localStorage` (sem backend), preparado para evoluir depois.
-- **Route groups**: a loja pública vive em `app/(loja)/` (layout com Navbar+Footer) e o admin autenticado em `app/admin/(painel)/` (layout com sidebar); `admin/login` fica fora do grupo `(painel)`. Os parênteses não afetam os URLs finais (`/`, `/loja`, `/admin/dashboard`, etc.).
+- **Route groups**: a loja pública vive em `app/(loja)/` (layout com Navbar+Footer) e o admin autenticado em `app/admin/(painel)/` (layout com sidebar); `admin/login` fica fora do grupo `(painel)`. Os parênteses não afetam os URLs finais (`/`, `/loja`, `/admin/dashboard`, etc.). `checkout` e `sucesso` também vivem em `app/(loja)/` porque precisam do `CartProvider` montado nesse layout.
+- **Stripe**: cliente criado de forma preguiçosa em `lib/stripe.ts` (`getStripe()`, não uma instância a nível de módulo) — instanciar `new Stripe(...)` no topo do módulo falha o build (`next build` importa as rotas para recolher metadados) sempre que `STRIPE_SECRET_KEY` estiver vazio, como acontece em desenvolvimento sem conta Stripe configurada. Preços dos line items do Checkout Session são sempre recalculados a partir da BD no servidor (nunca confiar no preço que vem do carrinho/cliente). `Order.stripePaymentId` tem constraint `@unique` para o webhook ser idempotente em reentregas do mesmo evento.
 - **Páginas públicas com dados da BD**: usar `export const dynamic = "force-dynamic"` (ex: homepage) em vez de deixar o Next pré-renderizar estaticamente no build — evita falhas de build se a BD estiver indisponível nesse momento e garante stock/preços sempre atuais. Páginas com `searchParams` (ex: `/loja`) já são dinâmicas automaticamente.
 
 ## Estrutura de pastas alvo
@@ -81,6 +82,6 @@ Detalhes completos dos campos e relações em [lojastp.md](lojastp.md#base-de-da
 - [x] Passo 3 — Painel Admin
 - [x] Passo 4 — Loja pública
 - [x] Passo 5 — Carrinho
-- [ ] Passo 6 — Stripe Checkout
+- [x] Passo 6 — Stripe Checkout
 - [ ] Passo 7 — Cloudinary + Emails
 - [ ] Passo 8 — Deploy Vercel

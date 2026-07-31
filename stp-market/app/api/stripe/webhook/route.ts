@@ -1,0 +1,104 @@
+import { NextResponse } from "next/server";
+import type Stripe from "stripe";
+import { prisma } from "@/lib/prisma";
+import { getStripe } from "@/lib/stripe";
+
+export async function POST(request: Request) {
+  const body = await request.text();
+  const signature = request.headers.get("stripe-signature");
+
+  if (!signature) {
+    return NextResponse.json({ error: "Assinatura em falta" }, { status: 400 });
+  }
+
+  let event: Stripe.Event;
+  try {
+    event = getStripe().webhooks.constructEvent(
+      body,
+      signature,
+      process.env.STRIPE_WEBHOOK_SECRET as string
+    );
+  } catch {
+    return NextResponse.json({ error: "Assinatura inválida" }, { status: 400 });
+  }
+
+  if (event.type === "checkout.session.completed") {
+    await handleCheckoutCompleted(event.data.object);
+  }
+
+  return NextResponse.json({ received: true });
+}
+
+async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
+  const paymentIntentId =
+    typeof session.payment_intent === "string"
+      ? session.payment_intent
+      : session.payment_intent?.id;
+
+  if (!paymentIntentId) return;
+
+  const existing = await prisma.order.findUnique({
+    where: { stripePaymentId: paymentIntentId },
+  });
+  if (existing) return;
+
+  const lineItems = await getStripe().checkout.sessions.listLineItems(session.id, {
+    expand: ["data.price.product"],
+  });
+
+  const orderItemsData = lineItems.data.flatMap((line) => {
+    const product = line.price?.product;
+    if (!product || typeof product === "string" || !("metadata" in product)) return [];
+    const productId = product.metadata.productId;
+    if (!productId) return [];
+
+    return [
+      {
+        productId,
+        quantity: line.quantity ?? 1,
+        price: (line.price?.unit_amount ?? 0) / 100,
+      },
+    ];
+  });
+
+  if (orderItemsData.length === 0) return;
+
+  const shippingDetails = session.collected_information?.shipping_details;
+  const customerDetails = session.customer_details;
+
+  const customer = await prisma.customer.create({
+    data: {
+      name: shippingDetails?.name ?? customerDetails?.name ?? "Cliente",
+      email: customerDetails?.email ?? "",
+      phone: customerDetails?.phone ?? "",
+      address:
+        [shippingDetails?.address.line1, shippingDetails?.address.line2]
+          .filter(Boolean)
+          .join(", ") || (customerDetails?.address?.line1 ?? ""),
+      city: shippingDetails?.address.city ?? customerDetails?.address?.city ?? "",
+      postalCode:
+        shippingDetails?.address.postal_code ?? customerDetails?.address?.postal_code ?? "",
+      country: shippingDetails?.address.country ?? customerDetails?.address?.country ?? "",
+    },
+  });
+
+  const total = orderItemsData.reduce((sum, item) => sum + item.price * item.quantity, 0);
+
+  await prisma.$transaction([
+    prisma.order.create({
+      data: {
+        customerId: customer.id,
+        stripePaymentId: paymentIntentId,
+        total,
+        status: "PAID",
+        items: { create: orderItemsData },
+      },
+    }),
+    ...orderItemsData.map((item) =>
+      prisma.product.update({
+        where: { id: item.productId },
+        data: { stock: { decrement: item.quantity } },
+      })
+    ),
+  ]);
+}

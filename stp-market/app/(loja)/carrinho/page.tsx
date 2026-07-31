@@ -97,7 +97,7 @@ export default function CarrinhoPage() {
           <span>Total</span>
           <span>€{subtotal.toFixed(2)}</span>
         </div>
-        <Button size="lg" disabled title="Disponível no Passo 6 (Stripe Checkout)">
+        <Button render={<Link href="/checkout" />} nativeButton={false} size="lg">
           Finalizar compra
         </Button>
       </div>
