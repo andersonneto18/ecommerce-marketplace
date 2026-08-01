@@ -10,6 +10,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   session: { strategy: "jwt" },
   providers: [
     Credentials({
+      id: "credentials",
       credentials: {
         email: {},
         password: {},
@@ -27,6 +28,27 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         if (!passwordsMatch) return null;
 
         return { id: user.id, email: user.email, role: user.role };
+      },
+    }),
+    Credentials({
+      id: "vendor-credentials",
+      credentials: {
+        email: {},
+        password: {},
+      },
+      authorize: async (credentials) => {
+        const parsed = loginSchema.safeParse(credentials);
+        if (!parsed.success) return null;
+
+        const vendor = await prisma.vendor.findUnique({
+          where: { email: parsed.data.email },
+        });
+        if (!vendor || vendor.status !== "APPROVED") return null;
+
+        const passwordsMatch = await bcrypt.compare(parsed.data.password, vendor.password);
+        if (!passwordsMatch) return null;
+
+        return { id: vendor.id, email: vendor.email, role: "VENDOR" };
       },
     }),
   ],

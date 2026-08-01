@@ -28,6 +28,16 @@ export function Footer() {
                 </li>
               </ul>
             </div>
+            <div className="space-y-2">
+              <p className="font-medium">Vender</p>
+              <ul className="space-y-1 text-muted-foreground">
+                <li>
+                  <Link href="/torna-te-vendedor" className="hover:text-primary">
+                    Torna-te vendedor
+                  </Link>
+                </li>
+              </ul>
+            </div>
           </nav>
         </div>
 

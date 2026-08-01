@@ -60,6 +60,8 @@ O `postinstall` corre automaticamente `prisma generate`.
 
 8. Preencher `BREVO_API_KEY` com a chave da tua conta [Brevo](https://app.brevo.com/settings/keys/api) e `EMAIL_FROM` com um remetente **verificado** nessa conta. Sem isto, a compra continua a funcionar normalmente — só o envio de emails falha silenciosamente (fica registado nos logs do servidor, não interrompe o checkout).
 
+9. (Opcional) `COMMISSION_RATE` — percentagem que a plataforma fica de cada venda de um fornecedor (ex: `10` = 10%). Por omissão é 10 se não definida.
+
 ## Como correr localmente
 
 ```bash
@@ -94,6 +96,7 @@ Depois de autenticado:
 - `/admin/produtos` — listar, criar, editar e eliminar produtos
 - `/admin/categorias` — listar, criar e editar categorias (sem eliminar, para não partir produtos que já as referenciam)
 - `/admin/encomendas` — listar encomendas; `/admin/encomendas/[id]` mostra os dados completos do cliente (nome, email, telefone, morada) e os produtos, e permite mudar o estado (dispara o email de atualização para o cliente)
+- `/admin/fornecedores` — aprovar/rejeitar candidaturas de vendedores e marcar pedidos de levantamento como pagos
 
 ## Loja pública
 
@@ -128,6 +131,18 @@ No formulário de produto do admin (`/admin/produtos/novo` e `/admin/produtos/[i
 - **Cliente** — atualização do estado da encomenda (`orderStatusUpdateEmail`), disparada quando o estado é alterado em `/admin/encomendas/[id]`
 
 Falhas no envio de email nunca bloqueiam o checkout nem a mudança de estado — ficam apenas registadas nos logs do servidor.
+
+## Marketplace de vendedores
+
+Loja única — os produtos dos vendedores aparecem misturados com os do admin no mesmo catálogo (`/loja`), sem mini-lojas. Não usa Stripe Connect: o checkout continua a ser um único pagamento, e o admin paga os vendedores manualmente por fora (transferência bancária).
+
+- `/torna-te-vendedor` — candidatura pública (nome, email, password, telefone). Fica "Pendente" até o admin aprovar em `/admin/fornecedores`.
+- `/fornecedor/login` — só entra depois de aprovado.
+- `/fornecedor/painel` — produtos publicados, total vendido, saldo disponível.
+- `/fornecedor/produtos` — CRUD dos produtos do próprio vendedor (o mesmo formulário do admin, reutilizado).
+- `/fornecedor/saldo` — saldo disponível, histórico de levantamentos, e formulário para solicitar um levantamento.
+
+Em cada venda de um produto com vendedor, o webhook do Stripe divide automaticamente o valor: o vendedor fica com `preço − comissão`, a comissão fica registada para o admin. A taxa é definida por `COMMISSION_RATE` no `.env` (percentagem única para todos os vendedores).
 
 ## Estrutura do projeto
 

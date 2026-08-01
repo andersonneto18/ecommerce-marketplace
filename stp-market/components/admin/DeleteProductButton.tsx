@@ -13,14 +13,15 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
-import { deleteProduct } from "@/app/admin/(painel)/produtos/actions";
 
 export function DeleteProductButton({
   productId,
   productName,
+  onDelete,
 }: {
   productId: string;
   productName: string;
+  onDelete: (id: string) => Promise<void>;
 }) {
   const [isPending, startTransition] = useTransition();
 
@@ -40,7 +41,7 @@ export function DeleteProductButton({
           <AlertDialogCancel>Cancelar</AlertDialogCancel>
           <AlertDialogAction
             disabled={isPending}
-            onClick={() => startTransition(() => deleteProduct(productId))}
+            onClick={() => startTransition(() => onDelete(productId))}
           >
             Eliminar
           </AlertDialogAction>

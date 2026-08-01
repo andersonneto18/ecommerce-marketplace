@@ -38,6 +38,8 @@ model Product {
   active      Boolean  @default(true)
   categoryId  String
   category    Category @relation(fields: [categoryId], references: [id])
+  vendorId    String?
+  vendor      Vendor?  @relation(fields: [vendorId], references: [id])
   orderItems  OrderItem[]
   createdAt   DateTime @default(now())
 }
@@ -75,11 +77,50 @@ model Order {
 }
 
 model OrderItem {
-  id        String  @id @default(cuid())
-  orderId   String
-  order     Order   @relation(fields: [orderId], references: [id])
-  productId String
-  product   Product @relation(fields: [productId], references: [id])
-  quantity  Int
-  price     Float
+  id               String  @id @default(cuid())
+  orderId          String
+  order            Order   @relation(fields: [orderId], references: [id])
+  productId        String
+  product          Product @relation(fields: [productId], references: [id])
+  quantity         Int
+  price            Float
+  vendorId         String?
+  vendor           Vendor? @relation(fields: [vendorId], references: [id])
+  vendorAmount     Float?
+  commissionAmount Float?
+}
+
+enum VendorStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model Vendor {
+  id        String              @id @default(cuid())
+  name      String
+  email     String              @unique
+  password  String
+  phone     String
+  message   String?
+  status    VendorStatus        @default(PENDING)
+  createdAt DateTime            @default(now())
+  products  Product[]
+  orderItems       OrderItem[]
+  withdrawals      WithdrawalRequest[]
+}
+
+enum WithdrawalStatus {
+  PENDING
+  PAID
+}
+
+model WithdrawalRequest {
+  id        String           @id @default(cuid())
+  vendorId  String
+  vendor    Vendor           @relation(fields: [vendorId], references: [id])
+  amount    Float
+  status    WithdrawalStatus @default(PENDING)
+  createdAt DateTime         @default(now())
+  paidAt    DateTime?
 }

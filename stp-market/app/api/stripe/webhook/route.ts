@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import type Stripe from "stripe";
 import { prisma } from "@/lib/prisma";
 import { getStripe } from "@/lib/stripe";
+import { getCommissionRate } from "@/lib/commission";
 import { sendNewOrderAdminEmail, sendOrderConfirmationEmail } from "@/lib/email/send";
 
 export async function POST(request: Request) {
@@ -65,11 +66,21 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
 
   if (lineItemsData.length === 0) return;
 
-  const orderItemsData = lineItemsData.map(({ productId, quantity, price }) => ({
-    productId,
-    quantity,
-    price,
-  }));
+  const products = await prisma.product.findMany({
+    where: { id: { in: lineItemsData.map((item) => item.productId) } },
+    select: { id: true, vendorId: true },
+  });
+  const vendorByProductId = new Map(products.map((product) => [product.id, product.vendorId]));
+  const commissionRate = getCommissionRate();
+
+  const orderItemsData = lineItemsData.map(({ productId, quantity, price }) => {
+    const vendorId = vendorByProductId.get(productId) ?? null;
+    const lineTotal = price * quantity;
+    const commissionAmount = vendorId ? lineTotal * commissionRate : null;
+    const vendorAmount = vendorId ? lineTotal - (commissionAmount ?? 0) : null;
+
+    return { productId, quantity, price, vendorId, commissionAmount, vendorAmount };
+  });
 
   const shippingDetails = session.collected_information?.shipping_details;
   const customerDetails = session.customer_details;

@@ -38,6 +38,7 @@ Este ficheiro é o guia de trabalho para desenvolver a **Neto Sabores** (nome do
 - **Cloudinary**: `lib/cloudinary.ts` configura o SDK a nível de módulo (ao contrário do Stripe, `cloudinary.config()` não lança erro com credenciais vazias, só falha quando se tenta mesmo fazer upload — por isso não precisa do padrão "lazy client"). Upload feito no servidor (`uploadProductImage` em `app/admin/(painel)/produtos/actions.ts`, via data URI base64) nunca no cliente, para não expor `CLOUDINARY_SECRET`. O campo de imagem no `ProductForm` mantém sempre um input de URL manual como alternativa ao upload.
 - **Base UI `Select` + label não-óbvia**: quando o `value` de um `SelectItem` não é já um texto legível (ex: um enum como `PAID`), passar a função de formatação a `<SelectValue>{(value) => label[value]}</SelectValue>` — a resolução automática da label a partir do texto do `SelectItem` nem sempre acontece antes do primeiro render (ver `components/admin/OrderStatusSelect.tsx`).
 - **Gestão de encomendas**: `admin/encomendas` (lista) e `admin/encomendas/[id]` (detalhe: dados completos do cliente + mudar estado) foram adicionados fora da sequência de passos, a pedido direto do utilizador — não estavam em nenhum passo do plano até aqui, mas fecham o ciclo de "admin recebe morada completa e prepara o envio" e dão finalmente um trigger ao email de atualização de estado.
+- **Postgres local (`npx prisma dev`) é instável nesta máquina**: ao longo do desenvolvimento, o servidor Postgres local efémero (usado em vez de uma Neon real) morre silenciosamente com frequência (erros "Server has closed the connection" / P1017 em pedidos normais, mesmo pouco depois de reiniciar o `npm run dev`). Procedimento de recuperação que resolve sempre: `npx prisma dev stop default` → `npx prisma dev rm default` → `npx prisma dev` (novo servidor, dados limpos) → `npx prisma migrate deploy` → `npx prisma db seed` → reiniciar `npm run dev` (matar o processo Node a segurar a porta 3000 primeiro, para garantir uma ligação/pool nova em vez de uma ligação antiga em cache). Isto não é um bug do código da app — confirmado repetidamente ligando diretamente com `pg.Client` enquanto o Prisma falhava.
 
 ## Estrutura de pastas alvo
 
@@ -75,9 +76,9 @@ stp-market/
 
 ## Modelos Prisma (resumo)
 
-`User` (admin) · `Category` · `Product` · `Customer` · `Order` (status: PENDING, PAID, PROCESSING, SHIPPED, DELIVERED, CANCELLED) · `OrderItem`
+`User` (admin) · `Category` · `Product` (`vendorId` opcional) · `Customer` · `Order` (status: PENDING, PAID, PROCESSING, SHIPPED, DELIVERED, CANCELLED) · `OrderItem` (`vendorId`/`vendorAmount`/`commissionAmount` opcionais) · `Vendor` (status: PENDING, APPROVED, REJECTED) · `WithdrawalRequest` (status: PENDING, PAID)
 
-Detalhes completos dos campos e relações em [lojastp.md](lojastp.md#base-de-dados-prisma).
+Campos base (User–OrderItem) detalhados em [lojastp.md](lojastp.md#base-de-dados-prisma); `Vendor`/`WithdrawalRequest` são posteriores a essa especificação, ver secção "Marketplace multi-vendedor" abaixo.
 
 ## Progresso
 
@@ -90,41 +91,16 @@ Detalhes completos dos campos e relações em [lojastp.md](lojastp.md#base-de-da
 - [x] Passo 7 — Cloudinary + Emails
 - [ ] Passo 8 — Deploy Vercel
 
-## Planeamento futuro: Marketplace multi-vendedor
+## Marketplace multi-vendedor
 
-**Estado: apenas conversado/desenhado, nada construído ainda.** Não avançar sem pedido explícito do utilizador ("vamos", "começa", etc. — não basta responder a perguntas de clarificação). Recomendação: só depois de fechar o Passo 8.
+Construído fora da sequência de passos, a pedido direto do utilizador (não estava em nenhum passo do plano original). Concretiza o que `lojastp.md` apontava como "objetivo futuro". Loja única e unificada (produtos de vendedores misturados com os do admin no mesmo catálogo `/loja`, sem mini-lojas); sem Stripe Connect — o checkout continua a ser um único pagamento normal e o pagamento aos vendedores é sempre manual (transferência bancária por fora, marcado como "Pago" no admin).
 
-Isto é a concretização do que `lojastp.md` já apontava como "objetivo futuro" (marketplace com múltiplos produtores/vendedores) e "melhorias futuras" (multi vendedores, comissão por venda).
+- **Modelos**: `Vendor` (nome, email, password, telefone, `status`: PENDING/APPROVED/REJECTED), `WithdrawalRequest` (vendorId, amount, `status`: PENDING/PAID). `Product.vendorId` (opcional — produtos do admin continuam sem vendedor). `OrderItem.vendorId`/`vendorAmount`/`commissionAmount` — snapshot calculado no momento da venda (não recalculado se a taxa de comissão mudar depois).
+- **Comissão**: taxa única e global via `COMMISSION_RATE` no `.env` (percentagem, ex: `10` = 10%; por omissão 10 se não definida) — decisão explícita a favor de simplicidade em vez de taxa configurável por vendedor. Calculada em `lib/commission.ts`, aplicada no webhook Stripe (`app/api/stripe/webhook/route.ts`) ao criar cada `OrderItem`.
+- **Autenticação do vendedor**: segundo provider Credentials em `auth.ts` com `id: "vendor-credentials"` (distinto do `id: "credentials"` do admin), autentica contra `Vendor` e só permite login com `status === "APPROVED"`. Sessão JWT carrega `role: "VENDOR"` tal como o admin carrega `role: "ADMIN"`. **Armadilha já apanhada**: o `authorized()` do middleware corre em `auth.config.ts` (edge-safe, sem os callbacks `jwt`/`session` completos que só existem em `auth.ts`) — sem um `session()` mínimo também em `auth.config.ts` a copiar `token.role` para `session.user.role`, o middleware nunca vê o role e bloqueia toda a gente mesmo com login correto. Qualquer novo campo de sessão usado em `authorized()` tem de ser espelhado ali.
+- **Rotas**: `/torna-te-vendedor` (candidatura pública, dentro de `app/(loja)/` para ter Navbar/Footer) · `/fornecedor/login` · `/fornecedor/(painel)/painel` (dashboard) · `/fornecedor/(painel)/produtos` (CRUD só dos produtos próprios, reutiliza `ProductForm`) · `/fornecedor/(painel)/saldo` (saldo + histórico + pedir levantamento) · `/admin/fornecedores` (aprovar/rejeitar candidaturas + marcar levantamentos como pagos). Middleware protege `/fornecedor/:path*` tal como já protegia `/admin/:path*`.
+- **Saldo**: calculado em `lib/vendor-balance.ts` (`getVendorBalance`) — soma `OrderItem.vendorAmount` de encomendas com estado PAID/PROCESSING/SHIPPED/DELIVERED, subtrai `WithdrawalRequest` com estado PENDING ou PAID (um pedido pendente já reserva o valor, evita pedir mais do que o saldo permite).
+- **`DeleteProductButton`**: generalizado para aceitar a ação a chamar via prop `onDelete` (antes importava `deleteProduct` do admin diretamente) — permite reutilização entre `admin/produtos` e `fornecedor/produtos`.
+- **Migrations sem shadow DB**: quando `prisma migrate dev` falha com o Postgres local efémero (erro recorrente "type already exists" no shadow database — ver `npx prisma dev` nas convenções acima), gerar o SQL com `prisma migrate diff --from-config-datasource --to-schema prisma/schema.prisma --script` (compara contra a BD real, não contra o histórico de migrations, evitando o shadow DB) e criar a pasta de migration à mão, depois `prisma migrate deploy`.
 
-**Modelo acordado em conversa:**
-
-- Loja única e unificada — os produtos dos vendedores aparecem misturados com os do admin no mesmo catálogo (`/loja`), sem mini-lojas nem páginas por vendedor.
-- Sem Stripe Connect / sem divisão automática do pagamento — decisão explícita para manter simples. O checkout continua a ser um único pagamento normal, como já está.
-
-**Fluxo do vendedor:**
-
-```text
-Loja pública → link "Torna-te vendedor" → candidatura (formulário)
-   → fica "Pendente" em admin/fornecedores
-   → Admin aprova ou rejeita
-   → Se aprovado: recebe login/password → painel próprio
-   → No painel: publica/edita os SEUS produtos (entram no catálogo normal da loja)
-```
-
-**Fluxo do dinheiro (por cada venda):**
-
-```text
-Cliente compra (carrinho pode misturar produtos de vários vendedores) → paga tudo junto (Stripe, como já está)
-   → por cada item da encomenda, o sistema sabe a que vendedor pertence
-   → valor do item divide-se: vendedor recebe (preço − comissão), admin fica com a comissão
-   → painel do vendedor mostra: total vendido, comissão descontada, saldo disponível
-   → vendedor pode "Solicitar levantamento" (escolhe quanto, até ao saldo disponível)
-   → pedido fica pendente → Admin vê a lista de pedidos, paga por fora (transferência bancária) e marca "Pago"
-   → saldo do vendedor é atualizado
-```
-
-Simulação de referência (comissão exemplo de 10%, não decidida): produto vendido a €20 → vendedor fica com €18, admin com €2.
-
-**Decisão em aberto:** taxa de comissão única e global para todos os vendedores, vs. taxa configurável por vendedor. Ainda não escolhido.
-
-**Implica (a alto nível, nada disto está feito):** entidade de Vendedor/Fornecedor com estado (pendente/aprovado/rejeitado) e login próprio; `Product` passa a poder pertencer a um vendedor (campo opcional — produtos do admin continuam a existir sem vendedor); registo de saldo/comissão por venda; entidade de pedido de levantamento; página `admin/fornecedores` (aprovar candidaturas, ver saldos, gerir levantamentos); painel do vendedor (produtos próprios + saldo + pedir levantamento).
+Simulação de referência (comissão de 10%): produto vendido a €37,50 (3 unidades a €12,50) → vendedor fica com €33,75, admin com €3,75.

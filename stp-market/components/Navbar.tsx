@@ -21,6 +21,9 @@ export function Navbar() {
           <Link href="/loja" className="hover:text-primary">
             Loja
           </Link>
+          <Link href="/torna-te-vendedor" className="hidden hover:text-primary sm:inline">
+            Torna-te vendedor
+          </Link>
           <CartLink />
         </nav>
       </div>

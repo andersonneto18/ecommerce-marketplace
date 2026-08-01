@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { slugify } from "@/lib/slugify";
 import { cloudinary } from "@/lib/cloudinary";
+import { uniqueProductSlug } from "@/lib/products";
 import { productSchema, type ProductInput } from "@/lib/validations/product";
 
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024; // 5MB
@@ -38,26 +39,9 @@ export async function uploadProductImage(formData: FormData) {
   }
 }
 
-async function uniqueSlug(name: string, ignoreId?: string) {
-  const base = slugify(name);
-  let slug = base;
-  let counter = 1;
-
-  while (
-    await prisma.product.findFirst({
-      where: { slug, ...(ignoreId ? { id: { not: ignoreId } } : {}) },
-    })
-  ) {
-    counter += 1;
-    slug = `${base}-${counter}`;
-  }
-
-  return slug;
-}
-
 export async function createProduct(input: ProductInput) {
   const data = productSchema.parse(input);
-  const slug = await uniqueSlug(data.name);
+  const slug = await uniqueProductSlug(data.name);
 
   await prisma.product.create({
     data: { ...data, slug },
@@ -76,7 +60,7 @@ export async function updateProduct(id: string, input: ProductInput) {
   const slug =
     slugify(data.name) === slugify(existing.name)
       ? existing.slug
-      : await uniqueSlug(data.name, id);
+      : await uniqueProductSlug(data.name, id);
 
   await prisma.product.update({
     where: { id },

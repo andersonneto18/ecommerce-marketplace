@@ -3,14 +3,12 @@ import { auth } from "@/auth";
 import { SignOutButton } from "@/components/admin/SignOutButton";
 
 const navItems = [
-  { href: "/admin/dashboard", label: "Dashboard" },
-  { href: "/admin/produtos", label: "Produtos" },
-  { href: "/admin/categorias", label: "Categorias" },
-  { href: "/admin/encomendas", label: "Encomendas" },
-  { href: "/admin/fornecedores", label: "Fornecedores" },
+  { href: "/fornecedor/painel", label: "Painel" },
+  { href: "/fornecedor/produtos", label: "Produtos" },
+  { href: "/fornecedor/saldo", label: "Saldo" },
 ];
 
-export default async function AdminPanelLayout({
+export default async function VendorPanelLayout({
   children,
 }: {
   children: React.ReactNode;
@@ -22,7 +20,7 @@ export default async function AdminPanelLayout({
       <aside className="w-60 shrink-0 border-r bg-muted/30 p-4">
         <div className="mb-6">
           <p className="text-lg font-semibold">Neto Sabores</p>
-          <p className="text-xs text-muted-foreground">Painel Admin</p>
+          <p className="text-xs text-muted-foreground">Painel do Fornecedor</p>
         </div>
         <nav className="space-y-1">
           {navItems.map((item) => (
@@ -39,7 +37,7 @@ export default async function AdminPanelLayout({
       <div className="flex-1">
         <header className="flex items-center justify-between border-b px-6 py-4">
           <p className="text-sm text-muted-foreground">{session?.user?.email}</p>
-          <SignOutButton />
+          <SignOutButton callbackUrl="/fornecedor/login" />
         </header>
         <main className="p-6">{children}</main>
       </div>
