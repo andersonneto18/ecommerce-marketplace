@@ -47,7 +47,7 @@ export default function VendorLoginPage() {
       <div className="w-full max-w-sm space-y-6 rounded-lg border bg-background p-8 shadow-sm">
         <div className="space-y-1 text-center">
           <h1 className="text-2xl font-semibold">Painel do Fornecedor</h1>
-          <p className="text-sm text-muted-foreground">Neto Sabores</p>
+          <p className="text-sm text-muted-foreground">Neto STP</p>
         </div>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">

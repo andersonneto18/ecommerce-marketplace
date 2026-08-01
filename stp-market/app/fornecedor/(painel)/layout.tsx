@@ -19,7 +19,7 @@ export default async function VendorPanelLayout({
     <div className="flex min-h-screen">
       <aside className="w-60 shrink-0 border-r bg-muted/30 p-4">
         <div className="mb-6">
-          <p className="text-lg font-semibold">Neto Sabores</p>
+          <p className="text-lg font-semibold">Neto STP</p>
           <p className="text-xs text-muted-foreground">Painel do Fornecedor</p>
         </div>
         <nav className="space-y-1">

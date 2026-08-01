@@ -60,7 +60,7 @@ export default function TornaTeVendedorPage() {
       <p className="mt-3 text-muted-foreground">
         Já imaginaste vender os teus produtos e gerar uma renda extra?
 
-Vendes produtos genuínos de São Tomé e Príncipe? Junta-te à Neto Sabores e chega a clientes em todo o país. A tua candidatura será analisada pela nossa equipa antes de teres acesso ao painel de vendedor.
+Vendes produtos genuínos de São Tomé e Príncipe — comida, artesanato, tecidos ou outra coisa qualquer das ilhas? Junta-te à Neto STP e chega a clientes em todo o país. A tua candidatura será analisada pela nossa equipa antes de teres acesso ao painel de vendedor.
       </p>
 
       <form onSubmit={handleSubmit(onSubmit)} className="mt-8 space-y-4">

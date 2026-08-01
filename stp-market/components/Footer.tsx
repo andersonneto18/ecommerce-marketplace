@@ -9,11 +9,11 @@ export function Footer() {
         <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
           <div className="max-w-sm space-y-2">
             <p className="font-heading text-lg font-semibold">
-              <span className="text-primary">Neto</span> Sabores
+              <span className="text-primary">Neto</span> STP
             </p>
             <p className="text-sm text-muted-foreground">
-              Café, cacau, chocolate e artesanato de São Tomé e Príncipe,
-              entregues em Portugal com o sabor e a cultura das ilhas.
+              Café, cacau, artesanato, tecidos e um pouco de tudo de São Tomé
+              e Príncipe, entregues em Portugal com a cultura das ilhas.
             </p>
           </div>
 
@@ -42,7 +42,7 @@ export function Footer() {
         </div>
 
         <p className="mt-8 text-xs text-muted-foreground">
-          © {year} Neto Sabores. Todos os direitos reservados.
+          © {year} Neto STP. Todos os direitos reservados.
         </p>
       </div>
     </footer>

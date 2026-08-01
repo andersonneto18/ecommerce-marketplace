@@ -1,6 +1,6 @@
-# Neto Sabores — Guia de Instruções do Projeto
+# Neto STP — Guia de Instruções do Projeto
 
-Este ficheiro é o guia de trabalho para desenvolver a **Neto Sabores** (nome do projeto no código/repositório: STP Market), uma loja online de produtos de São Tomé e Príncipe para clientes em Portugal. Especificação completa em [lojastp.md](lojastp.md), plano de execução passo a passo em [passos.md](passos.md).
+Este ficheiro é o guia de trabalho para desenvolver a **Neto STP** (nome do projeto no código/repositório: STP Market; nome anterior: Neto Sabores), uma loja online de produtos de São Tomé e Príncipe — comida, artesanato, tecidos e um pouco de tudo — para clientes em Portugal. Especificação completa em [lojastp.md](lojastp.md), plano de execução passo a passo em [passos.md](passos.md).
 
 ## Como trabalhar neste projeto
 

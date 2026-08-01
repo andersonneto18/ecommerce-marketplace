@@ -22,10 +22,10 @@ export async function generateMetadata({
   const { slug } = await params;
   const product = await getProduct(slug);
 
-  if (!product) return { title: "Produto não encontrado — Neto Sabores" };
+  if (!product) return { title: "Produto não encontrado — Neto STP" };
 
   return {
-    title: `${product.name} — Neto Sabores`,
+    title: `${product.name} — Neto STP`,
     description: product.description,
   };
 }

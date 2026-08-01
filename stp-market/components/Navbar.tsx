@@ -10,7 +10,7 @@ export function Navbar() {
             Neto
           </span>
           <span className="text-lg font-heading font-semibold tracking-tight">
-            Sabores
+            STP
           </span>
         </Link>
 

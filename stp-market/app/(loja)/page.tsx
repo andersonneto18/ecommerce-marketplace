@@ -24,11 +24,12 @@ export default async function HomePage() {
             São Tomé e Príncipe
           </p>
           <h1 className="mt-4 max-w-2xl font-heading text-4xl font-semibold tracking-tight sm:text-5xl">
-            O sabor das ilhas, à porta de casa
+            Um pouco de tudo das ilhas, à porta de casa
           </h1>
           <p className="mt-4 max-w-xl text-base opacity-90 sm:text-lg">
-            Café, cacau, chocolate artesanal e artesanato genuíno de São Tomé
-            e Príncipe, selecionados com cuidado e entregues em Portugal.
+            Café, cacau, artesanato, tecidos africanos e muito mais, direto de
+            São Tomé e Príncipe, selecionados com cuidado e entregues em
+            Portugal.
           </p>
           <Button
             render={<Link href="/loja" />}
@@ -46,24 +47,23 @@ export default async function HomePage() {
         <div className="grid gap-10 sm:grid-cols-2 sm:items-center">
           <div className="space-y-4">
             <h2 className="font-heading text-2xl font-semibold sm:text-3xl">
-              Um arquipélago de sabores e tradição
+              Um arquipélago de tradição e cultura
             </h2>
             <p className="text-muted-foreground">
               São Tomé e Príncipe, no coração do Golfo da Guiné, é terra de
               solos vulcânicos férteis onde nasceram alguns dos melhores
-              cacaus e cafés do mundo. Durante séculos, as roças
-              são-tomenses moldaram uma cultura própria — hoje viva no
-              trabalho de pequenos produtores e artesãos que continuam a
-              produzir de forma genuína e artesanal.
+              cacaus e cafés do mundo — mas também de artesãos, tecelões e
+              pequenos produtores que mantêm vivas tradições únicas, do
+              artesanato aos tecidos.
             </p>
             <p className="text-muted-foreground">
-              A Neto Sabores nasce para trazer essa história até Portugal,
+              A Neto STP nasce para trazer um pouco de tudo isso até Portugal,
               apoiando diretamente quem produz e dando a conhecer o melhor
               do arquipélago.
             </p>
           </div>
           <div className="grid grid-cols-2 gap-4">
-            {["Café", "Cacau", "Chocolate", "Artesanato"].map((label) => (
+            {["Café", "Cacau", "Artesanato", "Tecidos"].map((label) => (
               <div
                 key={label}
                 className="flex aspect-square items-center justify-center rounded-xl bg-secondary/60 font-heading text-lg font-medium text-secondary-foreground"

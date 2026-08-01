@@ -1,6 +1,6 @@
-# Neto Sabores
+# Neto STP
 
-Loja online de produtos de São Tomé e Príncipe para clientes em Portugal.
+Loja online de produtos de São Tomé e Príncipe (comida, artesanato, tecidos e mais) para clientes em Portugal.
 
 Especificação completa do produto em [`lojastp.md`](../lojastp.md) e plano de execução em [`passos.md`](../passos.md) (na raiz do repositório, um nível acima desta pasta).
 
