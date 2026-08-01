@@ -12,6 +12,7 @@ export async function sendOrderConfirmationEmail(params: {
   orderId: string;
   items: OrderEmailItem[];
   total: number;
+  siteUrl: string;
 }) {
   const { subject, html } = orderConfirmationEmail(params);
   await sendEmail({
@@ -26,6 +27,7 @@ export async function sendOrderStatusUpdateEmail(params: {
   customerEmail: string;
   orderId: string;
   status: string;
+  siteUrl: string;
 }) {
   const { subject, html } = orderStatusUpdateEmail(params);
   await sendEmail({
@@ -46,6 +48,7 @@ export async function sendNewOrderAdminEmail(params: {
   country: string;
   items: OrderEmailItem[];
   total: number;
+  siteUrl: string;
 }) {
   const adminEmail = process.env.ADMIN_EMAIL;
   if (!adminEmail) return;

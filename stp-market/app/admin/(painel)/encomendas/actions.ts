@@ -1,8 +1,10 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { headers } from "next/headers";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
+import { getSiteUrl } from "@/lib/site-url";
 import { sendOrderStatusUpdateEmail } from "@/lib/email/send";
 
 const statusSchema = z.enum([
@@ -29,11 +31,13 @@ export async function updateOrderStatus(orderId: string, status: string) {
 
   try {
     if (order.customer.email) {
+      const siteUrl = getSiteUrl((await headers()).get("origin"));
       await sendOrderStatusUpdateEmail({
         customerName: order.customer.name,
         customerEmail: order.customer.email,
         orderId: order.id,
         status: parsedStatus,
+        siteUrl,
       });
     }
   } catch (error) {

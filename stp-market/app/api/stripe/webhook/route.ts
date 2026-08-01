@@ -3,6 +3,7 @@ import type Stripe from "stripe";
 import { prisma } from "@/lib/prisma";
 import { getStripe } from "@/lib/stripe";
 import { getCommissionRate } from "@/lib/commission";
+import { getSiteUrl } from "@/lib/site-url";
 import { sendNewOrderAdminEmail, sendOrderConfirmationEmail } from "@/lib/email/send";
 
 export async function POST(request: Request) {
@@ -25,13 +26,13 @@ export async function POST(request: Request) {
   }
 
   if (event.type === "checkout.session.completed") {
-    await handleCheckoutCompleted(event.data.object);
+    await handleCheckoutCompleted(event.data.object, getSiteUrl(new URL(request.url).origin));
   }
 
   return NextResponse.json({ received: true });
 }
 
-async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
+async function handleCheckoutCompleted(session: Stripe.Checkout.Session, siteUrl: string) {
   const paymentIntentId =
     typeof session.payment_intent === "string"
       ? session.payment_intent
@@ -135,6 +136,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
         orderId: order.id,
         items: emailItems,
         total,
+        siteUrl,
       });
     }
 
@@ -149,6 +151,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
       country: customer.country,
       items: emailItems,
       total,
+      siteUrl,
     });
   } catch (error) {
     console.error("Falha ao enviar emails de confirmação de encomenda:", error);
